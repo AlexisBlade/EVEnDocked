@@ -1,12 +1,9 @@
-// Инициализация SQLite
-
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const db = new sqlite3.Database(path.resolve(__dirname, '../data/database.sqlite'));
 
 db.serialize(() => {
-  // Базовое создание таблицы
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +18,6 @@ db.serialize(() => {
     if (err) console.error('[DB] Ошибка создания таблицы users:', err.message);
   });
 
-  // Проверим, есть ли колонка telegram_id
   db.all("PRAGMA table_info(users);", (err, columns) => {
     if (err) return console.error('[DB] Ошибка PRAGMA:', err.message);
     const columnNames = columns.map(c => c.name);

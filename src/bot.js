@@ -12,7 +12,6 @@ const bot = new TelegramBot(token, { polling: true });
 bot.onText(/\/start/, (msg) => startCommand(bot, msg));
 bot.onText(/\/me/, (msg) => meCommand(bot, msg));
 
-// 👉 Теперь регистрируем колбэки централизованно
 handleCallback(bot);
 
 log('✅ Telegram bot started');

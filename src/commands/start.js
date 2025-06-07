@@ -1,22 +1,7 @@
 const db = require('../db');
 const { getLoginURL } = require('../services/esi');
 
-const modulesList = [
-  { id: 'assets', label: '📦 Активы' },
-  { id: 'industry', label: '🏭 Производство' },
-  { id: 'market', label: '📈 Рынок' },
-  { id: 'pi', label: '🌍 Планетарка' },
-  { id: 'skills', label: '🧠 Скиллы и прокачка' },
-  { id: 'contracts', label: '📑 Контракты' },
-  { id: 'logistics', label: '🚚 Логистика' },
-  { id: 'corp', label: '🏢 Корпорация' },
-  { id: 'pvp', label: '🔫 PvP Мониторинг' },
-  { id: 'bpo', label: '🧬 Чертежи / BPO' },
-  { id: 'tax', label: '💸 Налоги' },
-  { id: 'journal', label: '📒 Журнал ISK' },
-  { id: 'deals', label: '📊 Аналитика сделок' },
-  { id: 'activity', label: '🕒 Трекер активности' }
-];
+const modulesList = require('../constants/modules');
 
 module.exports = function startCommand(bot, msg) {
   const chatId = msg.chat.id;
@@ -28,7 +13,7 @@ module.exports = function startCommand(bot, msg) {
     }
 
     if (!row) {
-      const loginUrl = getLoginURL(chatId); // 👈 chatId как state
+      const loginUrl = getLoginURL(chatId);
       return bot.sendMessage(chatId, `👋 Привет! Чтобы пользоваться ботом, сначала авторизуйся через EVE Online:`, {
         reply_markup: {
           inline_keyboard: [[{ text: '🔐 Авторизоваться', url: loginUrl }]]

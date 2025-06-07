@@ -1,8 +1,7 @@
-// Express-сервер + точка входа
 const express = require('express');
 const { getToken, getCharacterInfo } = require('./services/esi');
 const db = require('./db');
-const bot = require('./bot'); // 👈 добавили
+const bot = require('./bot');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,7 +17,7 @@ app.get('/login', (req, res) => {
 app.get('/callback', async (req, res) => {
   try {
     const code = req.query.code;
-    const chat_id = req.query.state; // это Telegram chat.id
+    const chat_id = req.query.state; 
 
     const tokenData = await getToken(code);
     const charData = await getCharacterInfo(tokenData.access_token);
