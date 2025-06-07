@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  evendocked:
+    build: .
+    container_name: evendocked
+    ports:
+      - "1488:3000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    restart: unless-stopped
