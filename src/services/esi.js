@@ -14,12 +14,8 @@ function getLoginURL(state = 'init') {
 async function getToken(code) {
   const basic = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
   const response = await axios.post('https://login.eveonline.com/v2/oauth/token',
-    qs.stringify({
-      grant_type: 'authorization_code',
-      code,
-    }),
-    {
-      headers: {
+    qs.stringify({ grant_type: 'authorization_code', code }),
+    { headers: {
         'Authorization': `Basic ${basic}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       }
@@ -30,9 +26,7 @@ async function getToken(code) {
 
 async function getCharacterInfo(access_token) {
   const { data } = await axios.get('https://login.eveonline.com/oauth/verify', {
-    headers: {
-      Authorization: `Bearer ${access_token}`
-    }
+    headers: { Authorization: `Bearer ${access_token}` }
   });
   return data;
 }
