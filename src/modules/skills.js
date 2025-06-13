@@ -35,7 +35,6 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
-  // 📚 Просмотр прокачанных скиллов
   if (action === 'view_trained') {
     const { data } = await axios.get(
       `https://esi.evetech.net/latest/characters/${character_id}/skills/`,
@@ -53,20 +52,19 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
       sp: s.skillpoints_in_skill
     }));
 
-    skillsCache.set(tg_id, exportData);
+    if (!skillsCache.has(tg_id)) skillsCache.set(tg_id, {});
+    skillsCache.get(tg_id).trained = exportData;
 
     const sorted = exportData
       .sort((a, b) => b.sp - a.sp)
       .map(s => `📘 ${s.name} | L${s.level} | ${s.sp.toLocaleString('ru-RU')} SP`);
 
-    // разбиение на чанки по ~30 строк
     const chunks = [];
     for (let i = 0; i < sorted.length; i += 30) {
       chunks.push(sorted.slice(i, i + 30).join('\n'));
     }
 
     await bot.sendMessage(chat_id, `📚 Прокачанные скиллы (${total_sp.toLocaleString('ru-RU')} SP):`);
-
     for (const chunk of chunks) {
       await bot.sendMessage(chat_id, chunk);
     }
@@ -90,22 +88,29 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     const names = await resolveNames(data.map(i => i.skill_id), access_token);
     const now = Date.now();
 
-    const list = data.map((item, i) => {
-      const end = new Date(item.finish_date).getTime();
+    const queueData = data.map((item, i) => ({
+      id: item.skill_id,
+      name: names[i],
+      target_level: item.finished_level,
+      start: item.start_date,
+      end: item.finish_date
+    }));
+
+    if (!skillsCache.has(tg_id)) skillsCache.set(tg_id, {});
+    skillsCache.get(tg_id).queue = queueData;
+
+    const list = queueData.map((item) => {
+      const end = new Date(item.end).getTime();
       const mins = Math.max(0, Math.round((end - now) / 60000));
-      return `🧠 ${names[i]} → L${item.finished_level} | ${mins} мин`;
+      return `🧠 ${item.name} → L${item.target_level} | ${mins} мин`;
     });
 
-    skillsCache.set(tg_id, data);
-
-    // делим на чанки по 30 строк
     const chunks = [];
     for (let i = 0; i < list.length; i += 30) {
       chunks.push(list.slice(i, i + 30).join('\n'));
     }
 
     await bot.sendMessage(chat_id, `⏳ Очередь прокачки:`);
-
     for (const chunk of chunks) {
       await bot.sendMessage(chat_id, chunk);
     }
@@ -119,16 +124,24 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
-  // 💾 Экспорт
+  // 💾 Экспорт JSON (объединённый)
   if (action === 'export') {
-    const data = skillsCache.get(tg_id);
-    if (!data) {
-      return bot.sendMessage(chat_id, '⚠️ Нет данных для экспорта. Сначала открой список.');
+    const cached = skillsCache.get(tg_id);
+    if (!cached || (!cached.trained && !cached.queue)) {
+      return bot.sendMessage(chat_id, '⚠️ Нет данных для экспорта. Сначала открой прокачанное и очередь.');
     }
 
-    const filename = `skills_${tg_id}_${Date.now()}.json`;
+    const fullExport = {
+      character: character_name,
+      character_id,
+      trained: cached.trained || [],
+      queue: cached.queue || [],
+      exported_at: new Date().toISOString()
+    };
+
+    const filename = `skills_export_${tg_id}_${Date.now()}.json`;
     const filepath = path.join('/tmp', filename);
-    fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+    fs.writeFileSync(filepath, JSON.stringify(fullExport, null, 2));
 
     return bot.sendDocument(chat_id, filepath, {}, {
       filename,
