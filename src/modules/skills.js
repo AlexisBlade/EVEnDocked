@@ -26,6 +26,7 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
         inline_keyboard: [
           [{ text: '📚 Прокачанные', callback_data: 'skills_view_trained' }],
           [{ text: '⏳ Очередь', callback_data: 'skills_view_queue' }],
+          [{ text: '👤 О персонаже', callback_data: 'skills_attributes' }],
           [{ text: '💾 Экспорт JSON', callback_data: 'skills_export' }],
           [{ text: '📋 Меню', callback_data: 'menu_page_0' }]
         ]
@@ -33,7 +34,6 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
-  // Прокачанные
   if (action === 'view_trained') {
     const { data } = await safeRequest(tg_id, {
       method: 'get',
@@ -70,14 +70,11 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
 
     return bot.sendMessage(chat_id, '📋 Меню: /start', {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: '📋 Вернуться к меню', callback_data: 'menu_page_0' }]
-        ]
+        inline_keyboard: [[{ text: '📋 Вернуться к меню', callback_data: 'menu_page_0' }]]
       }
     });
   }
 
-  // Очередь
   if (action === 'view_queue') {
     const { data } = await safeRequest(tg_id, {
       method: 'get',
@@ -116,14 +113,69 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
 
     return bot.sendMessage(chat_id, '📋 Меню: /start', {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: '📋 Вернуться к меню', callback_data: 'menu_page_0' }]
-        ]
+        inline_keyboard: [[{ text: '📋 Вернуться к меню', callback_data: 'menu_page_0' }]]
       }
     });
   }
 
-  // Экспорт
+  if (action === 'attributes') {
+    let msg = `👤 *Информация о персонаже ${character_name}*\n\n`;
+
+    // Атрибуты
+    const { data: attr } = await safeRequest(tg_id, {
+      method: 'get',
+      url: `https://esi.evetech.net/latest/characters/${character_id}/attributes/`
+    });
+
+    msg += `🧬 *Характеристики:*\n`;
+    msg += `• Интеллект: *${attr.intelligence}*\n`;
+    msg += `• Восприятие: *${attr.perception}*\n`;
+    msg += `• Память: *${attr.memory}*\n`;
+    msg += `• Сила воли: *${attr.willpower}*\n`;
+    msg += `• Харизма: *${attr.charisma}*\n`;
+
+    // Бустер
+    if (attr.acceleration_booster) {
+      const boosterName = await resolveNames([attr.acceleration_booster.booster_type_id], char.access_token);
+      const expires = new Date(attr.acceleration_booster.expires_at);
+      const expiresLocal = expires.toLocaleString('ru-RU');
+      const remainingMins = Math.round((expires.getTime() - Date.now()) / 60000);
+      const remaining = remainingMins > 60
+        ? `${Math.floor(remainingMins / 60)}ч ${remainingMins % 60}м`
+        : `${remainingMins} мин`;
+      msg += `\n💊 *Бустер:* ${boosterName[0]} (до ${expiresLocal}, осталось ${remaining})`;
+    } else {
+      msg += `\n💊 *Бустер:* _нет активных_`;
+    }
+
+    // Импланты
+    try {
+      const { data: clone } = await safeRequest(tg_id, {
+        method: 'get',
+        url: `https://esi.evetech.net/latest/characters/${character_id}/clones/`
+      });
+
+      if (clone?.implants?.length) {
+        const implantNames = await resolveNames(clone.implants, char.access_token);
+        msg += `\n\n🧠 *Импланты:*\n`;
+        clone.implants.forEach((id, idx) => {
+          msg += `• Слот ${idx + 1}: ${implantNames[idx]}\n`;
+        });
+      } else {
+        msg += `\n\n🧠 *Импланты:* _не установлены_`;
+      }
+    } catch {
+      msg += `\n\n🧠 *Импланты:* _недоступны (нет прав)_`;
+    }
+
+    return bot.sendMessage(chat_id, msg, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [[{ text: '📋 Вернуться к меню', callback_data: 'menu_page_0' }]]
+      }
+    });
+  }
+
   if (action === 'export') {
     const cached = skillsCache.get(tg_id);
     if (!cached || (!cached.trained && !cached.queue)) {
