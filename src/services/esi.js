@@ -6,7 +6,7 @@ const db = require('../db');
 const CLIENT_ID = '560783be381b4a09bb92fe23db4094e0';
 const CLIENT_SECRET = 'BcQLe4VbwtevfnbUlEPKHeupDOwICOetA70eEjaQ';
 const REDIRECT_URI = 'http://194.116.172.72:1111/callback';
-const SCOPE = 'esi-wallet.read_character_wallet.v1 esi-skills.read_skills.v1';
+const SCOPE = 'esi-wallet.read_character_wallet.v1 esi-skills.read_skills.v1 esi-industry.read_character_jobs.v1';
 
 function getLoginURL(state = 'init') {
   return `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&client_id=${CLIENT_ID}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;

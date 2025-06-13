@@ -4,6 +4,7 @@ const meCommand = require('./commands/me');
 const handleCallback = require('./callbacks/modules');
 const { log } = require('./utils/logger');
 
+
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error('No TELEGRAM_BOT_TOKEN provided in .env');
 

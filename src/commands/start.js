@@ -1,7 +1,6 @@
 const db = require('../db');
 const { getLoginURL } = require('../services/esi');
-
-const modulesList = require('../constants/modules');
+const getMenuPage = require('../utils/getMenuPage');
 
 module.exports = function startCommand(bot, msg) {
   const chatId = msg.chat.id;
@@ -21,14 +20,7 @@ module.exports = function startCommand(bot, msg) {
       });
     }
 
-    const keyboard = {
-      inline_keyboard: modulesList.map(mod => [
-        { text: mod.label, callback_data: `mod_${mod.id}` }
-      ])
-    };
-
-    bot.sendMessage(chatId, `👋 Добро пожаловать, ${row.character_name}!\nВыбери модуль:`, {
-      reply_markup: keyboard
-    });
+    const keyboard = getMenuPage(0);
+    bot.sendMessage(chatId, `👋 Добро пожаловать, ${row.character_name}!\nВыбери модуль:`, keyboard);
   });
 };
