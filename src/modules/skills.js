@@ -1,7 +1,6 @@
-const { getAuthorizedCharacter } = require('../services/esi');
-const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { safeRequest, safeGetCharacter } = require('../services/safeAxios');
 const resolveNames = require('../utils/resolveNames');
 
 const skillsCache = new Map();
@@ -14,14 +13,13 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
 
   let char;
   try {
-    char = await getAuthorizedCharacter(tg_id);
+    char = await safeGetCharacter(tg_id);
   } catch (e) {
     return bot.sendMessage(chat_id, '⛔ Вы не авторизованы. Введите /start.');
   }
 
-  const { character_id, access_token, character_name } = char;
+  const { character_id, character_name } = char;
 
-  // 📋 Главное меню
   if (!action || action === 'main') {
     return bot.sendMessage(chat_id, `🧠 Скиллы персонажа ${character_name}`, {
       reply_markup: {
@@ -35,15 +33,16 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
+  // Прокачанные
   if (action === 'view_trained') {
-    const { data } = await axios.get(
-      `https://esi.evetech.net/latest/characters/${character_id}/skills/`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
+    const { data } = await safeRequest(tg_id, {
+      method: 'get',
+      url: `https://esi.evetech.net/latest/characters/${character_id}/skills/`
+    });
 
     const skills = data.skills || [];
     const total_sp = data.total_sp;
-    const names = await resolveNames(skills.map(s => s.skill_id), access_token);
+    const names = await resolveNames(skills.map(s => s.skill_id), char.access_token);
 
     const exportData = skills.map((s, i) => ({
       id: s.skill_id,
@@ -78,14 +77,14 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
-  // ⏳ Очередь прокачки
+  // Очередь
   if (action === 'view_queue') {
-    const { data } = await axios.get(
-      `https://esi.evetech.net/latest/characters/${character_id}/skillqueue/`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
+    const { data } = await safeRequest(tg_id, {
+      method: 'get',
+      url: `https://esi.evetech.net/latest/characters/${character_id}/skillqueue/`
+    });
 
-    const names = await resolveNames(data.map(i => i.skill_id), access_token);
+    const names = await resolveNames(data.map(i => i.skill_id), char.access_token);
     const now = Date.now();
 
     const queueData = data.map((item, i) => ({
@@ -124,7 +123,7 @@ module.exports = async function skillsModule(tg_id, chat_id, bot, query = null) 
     });
   }
 
-  // 💾 Экспорт JSON (объединённый)
+  // Экспорт
   if (action === 'export') {
     const cached = skillsCache.get(tg_id);
     if (!cached || (!cached.trained && !cached.queue)) {

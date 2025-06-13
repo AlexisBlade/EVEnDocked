@@ -1,7 +1,11 @@
 const axios = require('axios');
+const { httpAgent, httpsAgent } = require('./httpAgent');
 const qs = require('querystring');
 const dayjs = require('dayjs');
 const db = require('../db');
+
+axios.defaults.httpAgent = httpAgent;
+axios.defaults.httpsAgent = httpsAgent;
 
 const CLIENT_ID = '560783be381b4a09bb92fe23db4094e0';
 const CLIENT_SECRET = 'BcQLe4VbwtevfnbUlEPKHeupDOwICOetA70eEjaQ';
