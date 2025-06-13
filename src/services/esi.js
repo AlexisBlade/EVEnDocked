@@ -7,9 +7,9 @@ const db = require('../db');
 axios.defaults.httpAgent = httpAgent;
 axios.defaults.httpsAgent = httpsAgent;
 
-const CLIENT_ID = '560783be381b4a09bb92fe23db4094e0';
-const CLIENT_SECRET = 'BcQLe4VbwtevfnbUlEPKHeupDOwICOetA70eEjaQ';
-const REDIRECT_URI = 'http://194.116.172.72:1111/callback';
+const CLIENT_ID = process.env.EVE_CLIENT_ID;
+const CLIENT_SECRET = process.env.EVE_CLIENT_SECRET;
+const REDIRECT_URI = process.env.EVE_REDIRECT_URI;
 const SCOPE = 'esi-skills.read_skills.v1 esi-skills.read_skillqueue.v1 esi-wallet.read_character_wallet.v1 esi-wallet.read_corporation_wallets.v1 esi-characters.read_blueprints.v1 esi-assets.read_assets.v1 esi-location.read_location.v1 esi-location.read_ship_type.v1 esi-ui.write_waypoint.v1 esi-ui.open_window.v1 esi-fittings.read_fittings.v1 esi-fittings.write_fittings.v1 esi-industry.read_character_jobs.v1 esi-industry.read_corporation_jobs.v1 esi-killmails.read_killmails.v1 esi-mail.read_mail.v1 esi-mail.organize_mail.v1 esi-mail.send_mail.v1 esi-markets.read_character_orders.v1 esi-markets.read_corporation_orders.v1 esi-calendar.read_calendar_events.v1 esi-characters.read_contacts.v1 esi-characters.write_contacts.v1 esi-planets.manage_planets.v1 esi-corporations.read_structures.v1 esi-characters.read_loyalty.v1 esi-characters.read_standings.v1 esi-characters.read_agents_research.v1 esi-characters.read_titles.v1 esi-alliances.read_contacts.v1 esi-search.search_structures.v1 esi-universe.read_structures.v1';
 
 function getLoginURL(state = 'init') {
